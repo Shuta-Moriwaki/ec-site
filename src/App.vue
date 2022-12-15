@@ -1,28 +1,53 @@
 <template>
-  <div id="app">
-    <img alt="Vue logo" src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+  <div v-if="currentEmail == userEmail">
+    <div id="app">
+      <user-menu></user-menu>
+  <!--  <menu-header>ユーザメニュー</menu-header>-->
+    <!--<user-menu></user-menu>-->
+    </div>
+  </div>
+  <div v-else>
+    <div id ="app">
+      <login></login>
+      <!--<user-menu></user-menu>-->
+    </div>
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue';
+import Login from '@/components/Login.vue';
+// import ManagerMenu from '@/components/ManagerMenu.vue';
+import UserMenu from '@/components/UserMenu.vue';
+// import MenuHeader from '@/components/MenuHeader.vue';
+import firebase from 'firebase/app';
 
 export default {
-  name: 'App',
   components: {
-    HelloWorld,
+    Login,
+    // ManagerMenu,
+    UserMenu,
+    // MenuHeader,
+  },
+  data() {
+    return {
+      currentEmail: null,
+      userEmail: 'user@example.com',
+    };
+  },
+
+  async created() {
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        console.log('状態：ログイン中');
+        this.currentEmail = user.email;
+      } else {
+        console.log('状態：ログアウト');
+        this.currentEmail = null;
+      }
+    });
   },
 };
 </script>
 
 <style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
 </style>
