@@ -1,24 +1,28 @@
 <template>
   <b-container class="items">
-    <h3 class="ml-3">商品一覧</h3>
+    <h3 class="ml-3 d-flex justify-content-between">商品一覧
+    <!--カートモーダル-->
+    <cart :cart="cart" @delete-item="onDeleteItem"></cart>
+    </h3>
     <!--商品検索機能-->
     <b-form @submit.prevent="onSearchItems">
-          <b-form-group class="mb-2">
-            <b-form-input
-              type="text"
-              v-model="keyword"
-              label="検索"
-              placeholder="検索ワードを入力して下さい"
-            ></b-form-input>
-          <b-button
-            block
-            type="submit"
-            variant="outline-success"
-          >
-            検索
-          </b-button>
-          </b-form-group>
-        </b-form>
+      <b-form-group class="mb-2">
+        <b-form-input
+          type="text"
+          v-model="keyword"
+          label="検索"
+          placeholder="検索ワードを入力して下さい"
+        >
+        </b-form-input>
+        <b-button
+          block
+          type="submit"
+          variant="outline-success"
+        >
+          検索
+        </b-button>
+      </b-form-group>
+    </b-form>
     <!--検索した場合非表示にする-->
     <b-row v-if="this.searchItems.length === 0">
       <b-col
@@ -27,6 +31,7 @@
           name,
           type,
           price,
+          stock,
         } in items"
         :key="id"
         class="my-3"
@@ -46,18 +51,21 @@
           >
             詳細
           </b-button>
-          <b-modal :id="id" hide-footer>
+          <b-modal :id="id"
+            hide-footer
+          >
             <template #modal-title>
               <h3>{{ name }}</h3>
             </template>
             <h5>￥{{ price }}</h5>
-            <b-button
-              class="mt-3"
-              block
-              variant="outline-success"
-            >
-              買い物かごに入れる
-            </b-button>
+            <!--カートへ入れるボタンコンポーネント-->
+            <add-cart
+             :id="id"
+             :name="name"
+             :type="type"
+             :price="price"
+             :stock="stock"
+            ></add-cart>
           </b-modal>
         </b-card>
       </b-col>
@@ -69,6 +77,8 @@
           id,
           name,
           price,
+          type,
+          stock,
         } in searchItems"
         :key="id"
         class="my-3"
@@ -93,13 +103,14 @@
               <h3>{{ name }}</h3>
             </template>
             <h5>￥{{ price }}</h5>
-            <b-button
-              class="mt-3"
-              block
-              variant="outline-success"
-            >
-              買い物かごに入れる
-            </b-button>
+            <!--カートへ入れるボタンコンポーネント-->
+            <add-cart
+             :id="id"
+             :name="name"
+             :type="type"
+             :price="price"
+             :stock="stock"
+            ></add-cart>
           </b-modal>
         </b-card>
       </b-col>
@@ -114,12 +125,14 @@ import {
   BRow,
   BCol,
   BCard,
-  // BCardText,
   BModal,
   BForm,
   BFormGroup,
   BFormInput,
 } from 'bootstrap-vue';
+import AddCart from '@/components/AddCart.vue';
+import Cart from '@/components/Cart.vue';
+import { deleteItem } from '@/servicies/firebaseService';
 
 export default {
   components: {
@@ -128,11 +141,12 @@ export default {
     BRow,
     BCol,
     BCard,
-    // BCardText,
     BModal,
     BForm,
     BFormGroup,
     BFormInput,
+    AddCart,
+    Cart,
   },
 
   data() {
@@ -144,6 +158,10 @@ export default {
 
   props: {
     items: {
+      type: Array,
+      required: true,
+    },
+    cart: {
       type: Array,
       required: true,
     },
@@ -171,6 +189,13 @@ export default {
         }
       }
       return this.searchItems;
+    },
+    async onDeleteItem(id, itemId) {
+      await deleteItem(id, itemId)
+        .catch((err) => {
+          console.error(err.message);
+          this.makeToast('エラーの発生', '商品を削除できませんでした。');
+        });
     },
   },
 };
